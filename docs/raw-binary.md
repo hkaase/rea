@@ -3,8 +3,8 @@
 Headerless images are covered here. GameCube/Wii DOL images have a header and
 use their own format selection; see [GameCube DOL analysis](ghidra-dol.md).
 
-REA admits a headerless executable when the caller supplies the CPU family and
-the address where file offset 0 should be mapped. That interpretation is not
+REA admits a headerless executable when the caller supplies the CPU family,
+execution entry, and optionally a separate image load address. That interpretation is not
 inferred from a `.bin` suffix or from unrecognized bytes.
 
 ## Open and inspect
@@ -28,38 +28,39 @@ rea inspect-native-load-image /absolute/path/to/ecu.bin --target-format raw-bina
 }
 ```
 
-`architecture` is one of `x86`, `x86_64`, `arm`, `arm64`, `6502`, or `m68k`. `entry_point` is a
-hexadecimal address of the form `0x…`. The complete file is mapped starting at
-that address, and Ghidra seeds an `entry` function there before auto-analysis.
+`architecture` is one of `x86`, `x86_64`, `arm`, `arm64`, `6502`, `m68k`, `cpu32`, or `powerpc`. `entry_point` is a
+hexadecimal address of the form `0x…`. The execution entry is selected independently with optional `load_address` (CLI `--load-address`). File offset 0 maps at that load address; when omitted, legacy callers map it at `entry_point`. Ghidra seeds the execution entry before auto-analysis.
 ARM and AArch64 entries must be 4-byte aligned; m68k entries must be 2-byte
 aligned; x86 and 6502 entries may be byte-aligned.
 For 6502, the entry and complete mapped file must fit within `0x0000..0xffff`;
 images that cross the 16-bit boundary are rejected before provider startup.
 For m68k, the mapping must fit within `0x0..0xffffffff`.
 `open_binary` and an open `binary_session` return the canonical `entry_point`
-for raw targets so callers can verify the selected mapping directly.
+and explicitly selected `load_address` for raw targets so callers can verify the selected mapping directly.
 Omitted `format` keeps header-based detection; architecture and entry without
 `format=raw-binary` are rejected.
 
 Ghidra imports a private snapshot with `BinaryLoader` and these generic
 languages and compiler specifications. Each family has one fixed byte order:
-m68k is big-endian and the others are little-endian.
+m68k, CPU32, and PowerPC are big-endian; the others are little-endian.
 
-| architecture | language_id           | compiler_spec_id |
-| ------------ | --------------------- | ---------------- |
-| x86          | `x86:LE:32:default`   | `gcc`            |
-| x86_64       | `x86:LE:64:default`   | `gcc`            |
-| arm          | `ARM:LE:32:v7`        | `default`        |
-| arm64        | `AARCH64:LE:64:v8A`   | `default`        |
-| 6502         | `6502:LE:16:default`  | `default`        |
-| m68k         | `68000:BE:32:default` | `default`        |
+| architecture | language_id             | compiler_spec_id |
+| ------------ | ----------------------- | ---------------- |
+| x86          | `x86:LE:32:default`     | `gcc`            |
+| x86_64       | `x86:LE:64:default`     | `gcc`            |
+| arm          | `ARM:LE:32:v7`          | `default`        |
+| arm64        | `AARCH64:LE:64:v8A`     | `default`        |
+| 6502         | `6502:LE:16:default`    | `default`        |
+| m68k         | `68000:BE:32:default`   | `default`        |
+| cpu32        | `68000:BE:32:CPU32`     | `default`        |
+| powerpc      | `PowerPC:BE:32:default` | `default`        |
 
 Compiler specifications select analysis conventions; they do not identify the
 original compiler or ABI of a headerless target. Ghidra's x86 languages do not
 provide a compiler specification named `default`.
 
-Those settings, the caller-supplied entry, and `language_selection:
-caller-supplied-v1` are committed in the analysis profile. A different entry
+Those settings, the caller-supplied entry and explicit load address, and `language_selection:
+caller-supplied-v1` are committed in the analysis profile. A different entry, explicit load address
 or architecture is a different profile; snapshots from header-detected targets
 do not replay.
 
@@ -146,9 +147,37 @@ exercised.
 - Headers are not discovered from file bytes. This increment does not guess
   load addresses, vector tables, or memory maps.
 - Big-endian ARM, Thumb-only, Cortex-M, and other Ghidra processor variants are
-  unsupported. m68k is the only big-endian family.
+  unsupported. m68k, CPU32, and PowerPC use big-endian profiles.
 - Reset vectors, memory-mapped I/O, and firmware boot sequences are not
   emulated.
 - Independent load-image verification covers source identity, mapped file
   bytes, the bound language, and the caller-supplied entry. Original bytes
   stay unchanged.
+
+## CPU32 and PowerPC firmware profiles
+
+Linux/macOS Ghidra raw imports admit explicit `cpu32` and `powerpc` selections.
+CPU32 binds `68000:BE:32:CPU32`; PowerPC binds
+`PowerPC:BE:32:default`, both big-endian with the default compiler convention.
+CPU32 execution entries must be even; PowerPC entries must be 4-byte aligned.
+Both profiles require the complete image to fit within 32-bit addresses and
+the entry to lie within initialized file bytes. Language selection does not
+establish the producing compiler, ABI, controller model or peripheral semantics.
+Windows P0 remains unchanged.
+
+For a ROM mapped at zero whose reset vector identifies code at `0x440`:
+
+```bash
+rea inspect /absolute/path/to/pcm.bin --target-format raw-binary --architecture cpu32 --load-address 0x0 --entry-point 0x440 --provider ghidra --json
+```
+
+The equivalent MCP `open_binary` input includes `format: "raw-binary"`,
+`architecture: "cpu32"`, `load_address: "0x0"`, `entry_point: "0x440"`
+and `provider_id: "ghidra"`. A PowerPC ROM uses `architecture: "powerpc"`
+with the caller-verified mapping and code entry.
+
+Both addresses participate in the analysis profile and snapshot matching.
+Independent load-image verification reports the mapped `base_address` and
+the execution `entry.address` with its actual `entry.file_offset`.
+Reset-vector interpretation, RAM/peripheral mapping and runtime behavior remain
+separate research obligations; this import does not execute controller code.

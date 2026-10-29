@@ -140,3 +140,34 @@ describe("raw-binary admission", () => {
     ).toMatchObject({ ok: false, error: { _tag: "BinaryTargetError" } });
   });
 });
+
+describe("firmware mapping admission boundary", () => {
+  it.each(["cpu32", "powerpc"] as const)(
+    "preserves %s source identity with an independent load address",
+    async (architecture) => {
+      const directory = await createTestTempDirectory("rea-firmware-mapping-");
+      const path = join(directory, "firmware.bin");
+      const bytes = Buffer.alloc(1024);
+      bytes.writeUInt32BE(0x100, 4);
+      await writeFile(path, bytes);
+      const parsed = await parseBinaryTarget(path, {
+        formatHint: "raw-binary",
+        architecture,
+        entryPoint: "0x00000100",
+        loadAddress: "0x00000000",
+      });
+      expect(parsed).toMatchObject({
+        ok: true,
+        value: {
+          architecture,
+          entryPoint: "0x100",
+          entryPointSource: "0x00000100",
+          loadAddress: "0x0",
+          loadAddressSource: "0x00000000",
+          sha256: createHash("sha256").update(bytes).digest("hex"),
+        },
+      });
+      expect((await readFile(path)).equals(bytes)).toBe(true);
+    },
+  );
+});

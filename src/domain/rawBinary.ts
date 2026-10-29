@@ -16,6 +16,8 @@ export const BINARY_ARCHITECTURES = [
   "arm64",
   "6502",
   "m68k",
+  "cpu32",
+  "powerpc",
 ] as const satisfies readonly BinaryArchitecture[];
 
 /** Provider-neutral CPU family for a caller-supplied raw-binary load. */
@@ -61,10 +63,17 @@ export const validateRawBinaryLength = (
 
 /** Admitted headerless load identity used by target resolution and profiles. */
 export interface RawBinaryAdmission {
-  readonly architecture: HeaderArchitecture | RawOnlyArchitecture;
+  readonly architecture: HeaderArchitecture | RawOnlyArchitecture | "powerpc";
   readonly entryPoint: string;
   readonly entryPointSource: string;
+  readonly loadAddress?: string;
+  readonly loadAddressSource?: string;
 }
+
+/** Effective raw mapping base; omitted load selection preserves legacy callers. */
+export const rawBinaryLoadAddress = (
+  target: Pick<RawBinaryAdmission, "entryPoint" | "loadAddress">,
+): string => target.loadAddress ?? target.entryPoint;
 
 /** Why a headerless load was refused, with its owning classification. */
 export interface RawBinaryAdmissionRejection {
@@ -81,7 +90,9 @@ const addressWidth = (architecture: BinaryArchitecture): bigint =>
     ? 0xffffn
     : architecture === "x86" ||
         architecture === "arm" ||
-        architecture === "m68k"
+        architecture === "m68k" ||
+        architecture === "cpu32" ||
+        architecture === "powerpc"
       ? 0xffffffffn
       : 0xffffffffffffffffn;
 
@@ -89,13 +100,14 @@ const addressWidth = (architecture: BinaryArchitecture): bigint =>
 export const admitRawBinary = (input: {
   readonly architecture: unknown;
   readonly entryPoint: unknown;
+  readonly loadAddress?: unknown;
   readonly fileBytes: number;
 }): Result<RawBinaryAdmission, RawBinaryAdmissionRejection> => {
   const architecture = binaryArchitectureSchema.safeParse(input.architecture);
   if (!architecture.success)
     return err({
       reason:
-        "raw-binary format requires architecture (x86, x86_64, arm, arm64, 6502, or m68k)",
+        "raw-binary format requires architecture (x86, x86_64, arm, arm64, 6502, m68k, cpu32, or powerpc)",
       constraint: "load_selection_rejected",
     });
   if (typeof input.entryPoint !== "string")
@@ -111,7 +123,9 @@ export const admitRawBinary = (input: {
       constraint: "load_selection_rejected",
     });
   if (
-    (architecture.data === "arm" || architecture.data === "arm64") &&
+    (architecture.data === "arm" ||
+      architecture.data === "arm64" ||
+      architecture.data === "powerpc") &&
     entry.value.value % 4n !== 0n
   )
     return err({
@@ -119,9 +133,12 @@ export const admitRawBinary = (input: {
       constraint: "load_selection_rejected",
     });
   // 68000-family instruction words are fetched from even addresses.
-  if (architecture.data === "m68k" && entry.value.value % 2n !== 0n)
+  if (
+    (architecture.data === "m68k" || architecture.data === "cpu32") &&
+    entry.value.value % 2n !== 0n
+  )
     return err({
-      reason: `raw-binary m68k entry_point ${entry.value.canonical} must be 2-byte aligned`,
+      reason: `raw-binary ${architecture.data} entry_point ${entry.value.canonical} must be 2-byte aligned`,
       constraint: "load_selection_rejected",
     });
   const length = validateRawBinaryLength(input.fileBytes);
@@ -130,17 +147,39 @@ export const admitRawBinary = (input: {
       reason: length.error,
       constraint: "file_format_rejected",
     });
-  const last = entry.value.value + BigInt(input.fileBytes) - 1n;
-  const max = addressWidth(architecture.data);
-  if (entry.value.value > max || last > max)
+  const load =
+    input.loadAddress === undefined
+      ? entry
+      : typeof input.loadAddress === "string"
+        ? parseRawBinaryEntryPoint(input.loadAddress)
+        : err("load_address must be a hexadecimal address of the form 0x…");
+  if (!load.ok)
     return err({
-      reason: `raw-binary mapping from ${entry.value.canonical} must fit in the ${architecture.data} address width`,
+      reason: load.error.replaceAll("entry_point", "load_address"),
+      constraint: "load_selection_rejected",
+    });
+  const last = load.value.value + BigInt(input.fileBytes) - 1n;
+  if (entry.value.value < load.value.value || entry.value.value > last)
+    return err({
+      reason: "raw-binary entry_point must be within the mapped file bytes",
+      constraint: "load_selection_rejected",
+    });
+  const max = addressWidth(architecture.data);
+  if (load.value.value > max || last > max)
+    return err({
+      reason: `raw-binary mapping from ${load.value.canonical} must fit in the ${architecture.data} address width`,
       constraint: "load_selection_rejected",
     });
   return ok({
     architecture: architecture.data,
     entryPoint: entry.value.canonical,
     entryPointSource: entry.value.source,
+    ...(input.loadAddress === undefined
+      ? {}
+      : {
+          loadAddress: load.value.canonical,
+          loadAddressSource: load.value.source,
+        }),
   });
 };
 
@@ -149,9 +188,13 @@ export const rawBinarySelectionError = (input: {
   readonly format?: ExecutableFormatHint;
   readonly architecture?: unknown;
   readonly entryPoint?: unknown;
+  readonly loadAddress?: unknown;
 }): string | undefined => {
   const hasArchitecture = input.architecture !== undefined;
   const hasEntry = input.entryPoint !== undefined;
+  const hasLoad = input.loadAddress !== undefined;
+  if (hasLoad && input.format !== "raw-binary")
+    return "load_address applies only with format=raw-binary";
   if (input.format === "gamecube-dol") {
     // The DOL header fixes architecture; entry_point is checked against it at admission.
     return hasArchitecture

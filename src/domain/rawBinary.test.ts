@@ -250,3 +250,93 @@ describe("raw-binary selection pairing", () => {
     ).toBe("architecture and entry_point apply only with format=raw-binary");
   });
 });
+
+describe("firmware load and execution addresses", () => {
+  it.each(["cpu32", "powerpc"])(
+    "admits %s firmware with a distinct mapped base",
+    (architecture) => {
+      expect(
+        admitRawBinary({
+          architecture,
+          loadAddress: "0x00000000",
+          entryPoint: "0x100",
+          fileBytes: 1024,
+        }),
+      ).toEqual({
+        ok: true,
+        value: {
+          architecture,
+          loadAddress: "0x0",
+          loadAddressSource: "0x00000000",
+          entryPoint: "0x100",
+          entryPointSource: "0x100",
+        },
+      });
+    },
+  );
+  it.each(["0xff", "0x500"])(
+    "refuses an entry %s outside initialized file bytes",
+    (entryPoint) => {
+      expect(
+        admitRawBinary({
+          architecture: "x86",
+          loadAddress: "0x100",
+          entryPoint,
+          fileBytes: 1024,
+        }),
+      ).toMatchObject({
+        ok: false,
+        error: {
+          constraint: "load_selection_rejected",
+          reason: expect.stringContaining("within the mapped"),
+        },
+      });
+    },
+  );
+  it.each([undefined, "0xgg", 12])(
+    "validates supplied load addresses %s",
+    (loadAddress) => {
+      const result = admitRawBinary({
+        architecture: "cpu32",
+        loadAddress,
+        entryPoint: "0x100",
+        fileBytes: 4,
+      });
+      expect(result.ok).toBe(loadAddress === undefined);
+    },
+  );
+  it.each([
+    ["cpu32", "0x101", "2-byte"],
+    ["powerpc", "0x102", "4-byte"],
+  ])("requires aligned %s entries", (architecture, entryPoint, alignment) => {
+    expect(
+      admitRawBinary({
+        architecture,
+        loadAddress: "0x0",
+        entryPoint,
+        fileBytes: 1024,
+      }),
+    ).toMatchObject({
+      ok: false,
+      error: { reason: expect.stringContaining(alignment) },
+    });
+  });
+  it("refuses mappings beyond the selected 32-bit firmware address space", () => {
+    expect(
+      admitRawBinary({
+        architecture: "powerpc",
+        loadAddress: "0xfffffffc",
+        entryPoint: "0xfffffffc",
+        fileBytes: 8,
+      }),
+    ).toMatchObject({
+      ok: false,
+      error: { reason: expect.stringContaining("powerpc address width") },
+    });
+  });
+  it("rejects a load address on a header-detected target", () => {
+    expect(rawBinarySelectionError({ loadAddress: "0x0" })).toBe(
+      "load_address applies only with format=raw-binary",
+    );
+  });
+});

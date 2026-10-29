@@ -19,8 +19,11 @@ export const isGhidraPspTarget = (target: BinaryTarget): boolean =>
 export const ghidraProcessorUnsupportedReason = (
   target: BinaryTarget,
 ): string | null => {
-  // DOL admission establishes its processor from the caller-selected format; the ELF PowerPC gate does not apply.
-  if (target.kind === "executable" && target.format === "gamecube-dol")
+  // DOL and raw admission explicitly establish the processor profile; ELF gates do not apply.
+  if (
+    target.kind === "executable" &&
+    (target.format === "gamecube-dol" || target.format === "raw-binary")
+  )
     return null;
   if (target.kind === "executable" && target.architecture === "powerpc")
     return ghidraPowerPcUnsupportedReason(target);

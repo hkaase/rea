@@ -236,6 +236,9 @@ export const resolveGhidraAnalysisProfile = async (
           compiler_spec_id: language.compilerSpecId,
           language_selection: "caller-supplied-v1",
           entry_point: target.entryPoint,
+          ...(target.format === "raw-binary" && target.loadAddress !== undefined
+            ? { load_address: target.loadAddress }
+            : {}),
           entry_seed: "external-entry-and-function-before-analysis-v1",
           ...analyzerParameters,
         }),
@@ -455,6 +458,9 @@ const createGhidraProfile = (
             load_segment: parameters.load_segment ?? null,
             address_coordinates: parameters.address_coordinates ?? null,
             entry_point: parameters.entry_point ?? null,
+            ...(parameters.load_address === undefined
+              ? {}
+              : { load_address: parameters.load_address }),
           }),
         }
       : {}),

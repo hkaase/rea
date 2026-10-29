@@ -189,6 +189,9 @@ const registerOpenLifecycleTool = ({
           ...(input.architecture === undefined
             ? {}
             : { architecture: input.architecture }),
+          ...(input.load_address === undefined
+            ? {}
+            : { loadAddress: input.load_address }),
           ...(input.entry_point === undefined
             ? {}
             : { entryPoint: input.entry_point }),

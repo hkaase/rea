@@ -44,6 +44,15 @@ const targets: readonly BinaryTarget[] = [
     availableArchitectures: ["powerpc"],
     powerpc: elf,
   },
+  ...(["cpu32", "powerpc"] as const).map((architecture) => ({
+    ...executable,
+    format: "raw-binary" as const,
+    architecture,
+    availableArchitectures: [architecture],
+    entryPoint: "0x100",
+    entryPointSource: "0x100",
+    loadAddress: "0x0",
+  })),
   {
     ...executable,
     format: "elf",
@@ -71,16 +80,25 @@ const targets: readonly BinaryTarget[] = [
     managed: false,
     executableRole: "application",
   },
-  ...(["x86", "x86_64", "arm", "arm64", "6502", "m68k"] as const).map(
-    (architecture) => ({
-      ...executable,
-      format: "raw-binary" as const,
-      architecture,
-      availableArchitectures: [architecture],
-      entryPoint: "0x1000",
-      entryPointSource: "0x00001000",
-    }),
-  ),
+  ...(
+    [
+      "x86",
+      "x86_64",
+      "arm",
+      "arm64",
+      "6502",
+      "m68k",
+      "cpu32",
+      "powerpc",
+    ] as const
+  ).map((architecture) => ({
+    ...executable,
+    format: "raw-binary" as const,
+    architecture,
+    availableArchitectures: [architecture],
+    entryPoint: "0x1000",
+    entryPointSource: "0x00001000",
+  })),
   {
     ...executable,
     format: "gamecube-dol",
@@ -146,6 +164,9 @@ it.each(["draft-2020-12", "draft-07"] as const)(
         kind: target.kind,
         format: target.format,
         architecture: target.architecture ?? null,
+        ...(target.format === "raw-binary" && target.loadAddress !== undefined
+          ? { load_address: target.loadAddress }
+          : {}),
         ...(target.format === "raw-binary" || target.format === "gamecube-dol"
           ? { entry_point: target.entryPoint }
           : {}),

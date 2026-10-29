@@ -46,8 +46,9 @@ export const liveBinaryTargetSummaryVariants = [
     ...executable,
     format: z.literal("raw-binary"),
     architecture: binaryArchitectureSchema,
+    load_address: rawBinaryEntryPointSchema.exactOptional(),
     entry_point: rawBinaryEntryPointSchema.describe(
-      "Canonical caller-selected address where raw file offset 0 is mapped and execution is seeded.",
+      "Canonical caller-selected execution entry. File offset 0 maps here only when load_address is omitted.",
     ),
   }),
   z.object({

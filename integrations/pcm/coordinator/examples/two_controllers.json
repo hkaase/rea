@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "workers": 2,
+  "rea": {
+    "command": "/opt/pcm-reversal/node/bin/node",
+    "args": ["/opt/pcm-reversal/tools/rea/scripts/rea.mjs", "mcp"],
+    "env": {
+      "GHIDRA_INSTALL_DIR": "/opt/pcm-reversal/tools/ghidra_12.1.4_PUBLIC",
+      "REA_MCP_TOOL_FAMILIES": "session,direct,enhanced",
+      "REA_GHIDRA_STARTUP_TIMEOUT_MS": "180000"
+    }
+  },
+  "jobs": [
+    {
+      "id": "p59-startup",
+      "path": "/opt/pcm-reversal/corpus/p59_12587603.bin",
+      "sha256": "3817697c53d79b42f9eb492921d6f5bc8cd1a0a0e116b51d30c8ab06edd022da",
+      "architecture": "cpu32",
+      "load_address": "0x0",
+      "entry_point": "0x440",
+      "questions": [
+        "Which early instructions, direct calls and register writes are statically visible?"
+      ],
+      "operations": [
+        {
+          "tool": "inspect_native_load_image",
+          "arguments": { "detail": "complete" }
+        },
+        { "tool": "list_procedures", "arguments": { "detail": "summary" } },
+        {
+          "tool": "read_function_instructions",
+          "arguments": { "procedure": "0x440" }
+        },
+        {
+          "tool": "analyze_function",
+          "arguments": { "procedure": "0x440", "detail": "complete" }
+        },
+        {
+          "tool": "procedure_references",
+          "arguments": { "procedure": "0x440" }
+        }
+      ]
+    },
+    {
+      "id": "e38-startup",
+      "path": "/opt/pcm-reversal/corpus/e38_12607218.bin",
+      "sha256": "6ef498b09329b39361265d42338d5e501655e688bfab3de7de8c032a43da6575",
+      "architecture": "powerpc",
+      "load_address": "0x0",
+      "entry_point": "0x100",
+      "questions": [
+        "Where does the observed branch stub at 0x100 transfer control? Hardware reset mapping remains unverified."
+      ],
+      "operations": [
+        {
+          "tool": "inspect_native_load_image",
+          "arguments": { "detail": "complete" }
+        },
+        { "tool": "list_procedures", "arguments": { "detail": "summary" } },
+        {
+          "tool": "inspect_native_instruction",
+          "arguments": { "address": "0x100" }
+        },
+        {
+          "tool": "read_function_instructions",
+          "arguments": { "procedure": "0x168" }
+        },
+        {
+          "tool": "analyze_function",
+          "arguments": { "procedure": "0x168", "detail": "complete" }
+        },
+        {
+          "tool": "procedure_references",
+          "arguments": { "procedure": "0x100" }
+        }
+      ]
+    }
+  ]
+}

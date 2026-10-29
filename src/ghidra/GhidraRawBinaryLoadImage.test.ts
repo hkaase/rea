@@ -283,3 +283,46 @@ describe("raw-binary independent load-image checks", () => {
     ).toBe(false);
   });
 });
+
+describe("firmware language and separate load-address verification", () => {
+  it.each([
+    ["cpu32", "68000:BE:32:CPU32"],
+    ["powerpc", "PowerPC:BE:32:default"],
+  ] as const)("binds %s explicitly", (architecture, languageId) => {
+    expect(ghidraRawBinaryLanguage(architecture)).toEqual({
+      languageId,
+      compilerSpecId: "default",
+      defaultAddressSpace: "ram",
+    });
+  });
+  it("verifies source bytes at the base while retaining a nonzero entry offset", () => {
+    const f = fixtureRawBinaryLoadImage();
+    const target = {
+      ...f.target,
+      architecture: "cpu32" as const,
+      availableArchitectures: ["cpu32" as const],
+      entryPoint: "0x1002",
+      loadAddress: "0x1000",
+    };
+    f.observation.language_id = "68000:BE:32:CPU32";
+    const mapping = f.observation.mappings[0];
+    if (!mapping) throw new Error("missing fixture mapping");
+    mapping.start = "0x1000";
+    mapping.end = "0x1003";
+    f.observation.entry_points = ["0x1002"];
+    expect(
+      attestGhidraRawBinaryLoadImage(f.snapshot, target, f.observation),
+    ).toMatchObject({
+      ok: true,
+      value: {
+        status: "verified",
+        base_address: "0x1000",
+        entry: { address: "0x1002", file_offset: 2 },
+      },
+    });
+    f.observation.entry_points = ["0x1000"];
+    expect(
+      attestGhidraRawBinaryLoadImage(f.snapshot, target, f.observation),
+    ).toMatchObject({ ok: true, value: { status: "mismatch" } });
+  });
+});

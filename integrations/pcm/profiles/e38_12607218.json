@@ -1,0 +1,19 @@
+{
+  "name": "e38_12607218",
+  "architecture": "powerpc",
+  "load_address": "0x0",
+  "entry_point": "0x100",
+  "language": "PowerPC:BE:32:default",
+  "compiler": "default",
+  "size": 2097152,
+  "sha256": "6ef498b09329b39361265d42338d5e501655e688bfab3de7de8c032a43da6575",
+  "file_base": "0x0",
+  "analysis_seed": "0x100",
+  "source": "https://raw.githubusercontent.com/PcmHammer/PcmHammer/ac45d15958cfd8591bf0c47ceae9040394e25e2b/Apps/Tests/TestData/E38_2048KiB_12607218.bin",
+  "limitations": [
+    "Generic PowerPC profile; MPC5xx-specific semantics require further validation.",
+    "Seed 0x100 is an observed branch stub, not a verified hardware reset entry.",
+    "Peripheral, RAM and runtime remapping are not yet modeled.",
+    "This is a static import, not controller execution or behavioral validation."
+  ]
+}

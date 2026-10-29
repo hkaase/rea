@@ -1,0 +1,352 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-29",
+  "status": "passed",
+  "upstream_base": "c0c3902207d6b1a33709e42b80c7e570da7db964",
+  "fork": "https://github.com/hkaase/rea",
+  "branch": "pcm-firmware-workers",
+  "environment": {
+    "platform": "WSL Linux x64",
+    "node": "24.22.1",
+    "npm": "11.16.0",
+    "ghidra": "12.1.4",
+    "java": "21",
+    "python": "3.12",
+    "mcp_python": "1.30.0"
+  },
+  "automated_checks": {
+    "rea_source_tests": 363,
+    "rea_boundary_tests": 12,
+    "coordinator_tests": 17,
+    "real_cli_mapping_lanes": 5,
+    "authenticated_evidence_bundles": 14,
+    "real_coordinator_mcp": "passed",
+    "windows_wsl_stdio": "passed",
+    "typecheck_and_fast_lint": "passed",
+    "docs_check": "passed",
+    "documentation_consistency_tests": 9,
+    "test_discovery_files": 2855
+  },
+  "comparison": {
+    "schema_version": 1,
+    "status": "passed",
+    "job_count": 7,
+    "parallel": {
+      "workers": 2,
+      "elapsed_seconds": 101.3614991290001,
+      "sampled_cpu_seconds_lower_bound": 665.01,
+      "sampled_peak_process_family_rss_bytes": 3644325888,
+      "real_image_analysis_request_overlap_seconds": 60.84793057699994,
+      "sampled_distinct_worker_jvm_overlap_seconds": 6.1321867260001,
+      "cleanup_survivors": 0
+    },
+    "serial": {
+      "workers": 1,
+      "elapsed_seconds": 178.03124171199988,
+      "sampled_cpu_seconds_lower_bound": 602.87,
+      "sampled_peak_process_family_rss_bytes": 2564231168,
+      "cleanup_survivors": 0
+    },
+    "observed_elapsed_serial_divided_by_parallel": 1.7563990592268592,
+    "limitations": [
+      "One measured run per configuration is not a general performance claim.",
+      "Both runs use fresh REA worker and Ghidra sessions; operating-system page caches are warm and uncontrolled.",
+      "Parallel run precedes serial run; no randomization or confidence interval was measured.",
+      "RSS is a sampled process-family sum and can miss between-sample peaks; CPU is a sampled lower bound.",
+      "This deterministic pipeline invokes no language model; model-token usage is not applicable.",
+      "Throughput measurements do not establish decompiler semantic correctness or controller runtime behavior."
+    ]
+  },
+  "jobs": [
+    {
+      "job_id": "p59-startup",
+      "status": "passed",
+      "evidence_records": 11,
+      "load_address": "0x0",
+      "entry_point": "0x440",
+      "language": "68000:BE:32:CPU32",
+      "source_sha256": "3817697c53d79b42f9eb492921d6f5bc8cd1a0a0e116b51d30c8ab06edd022da",
+      "profile_digest": "c38ee0c682a30b17eaa0d40550b55c6881f32b32e5ed42b4817c657d2696fe7f",
+      "warnings": [
+        "Unresolved computed or indirect flows without target addresses are not represented as reference edges.",
+        "Thunk and external classifications are Ghidra FunctionManager observations; they do not resolve targetless calls.",
+        "Pseudocode and assembly are Ghidra-specific representations, not original source or Hopper-equivalent text.",
+        "Synthetic Ghidra entry-point references without actionable memory sources are omitted.",
+        "/* WARNING: Control flow encountered bad instruction data */",
+        "/* WARNING: This function may have set the stack pointer */",
+        "/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */",
+        "/* WARNING: Bad instruction - Truncating control flow here */"
+      ],
+      "findings": [
+        {
+          "confidence": "observed",
+          "finding": "The source image maps at 0x0, with selected execution entry 0x440 at file offset 0x440, under 68000:BE:32:CPU32.",
+          "evidence_ids": [
+            "ev_45f4059ddd017f4a5ceab370cff29cf876dc797438c5a7ca4e83c3d581b07351"
+          ]
+        },
+        {
+          "confidence": "observed",
+          "finding": "The big-endian source reset vector at file offset 4 selects 0x440; the first decoded instruction there clears A6 with SUBA.",
+          "evidence_ids": [
+            "ev_cba8f81e92cb5d24bb28a1d3c5191d8dba6e55b17bdd2e5468f6670c7dbc4862",
+            "ev_9a3e27fa4097c3f4e1d9b5ea04b9dfffc57c243478969cbb1acf8d6f1f354c19",
+            "ev_45f4059ddd017f4a5ceab370cff29cf876dc797438c5a7ca4e83c3d581b07351"
+          ]
+        },
+        {
+          "confidence": "observed",
+          "finding": "Early startup contains the decoded instruction move.w D0w,(0xfffffb04).w at 0x44a. Its peripheral meaning remains unverified.",
+          "evidence_ids": [
+            "ev_194ac3358eb6a8df63fd3785cea1dfa2351c981b56992ec7bbcb34ac4231587d",
+            "ev_9268fcca1883862e10919348f26c5e5ccd89da69486d4fed7340fd85cd6870cb"
+          ]
+        }
+      ],
+      "limitations": [
+        "Static analysis only; no firmware execution.",
+        "Instruction and byte agreement do not prove complete processor or peripheral semantics.",
+        "Pseudocode presence does not establish semantic equivalence."
+      ]
+    },
+    {
+      "job_id": "e38-startup",
+      "status": "passed",
+      "evidence_records": 13,
+      "load_address": "0x0",
+      "entry_point": "0x100",
+      "language": "PowerPC:BE:32:default",
+      "source_sha256": "6ef498b09329b39361265d42338d5e501655e688bfab3de7de8c032a43da6575",
+      "profile_digest": "7570a98a6188a31a87dbd432f8013c16be0e4da1ff02d820e6eeb5f09fde8031",
+      "warnings": [
+        "Unresolved computed or indirect flows without target addresses are not represented as reference edges.",
+        "Thunk and external classifications are Ghidra FunctionManager observations; they do not resolve targetless calls.",
+        "Pseudocode and assembly are Ghidra-specific representations, not original source or Hopper-equivalent text.",
+        "Synthetic Ghidra entry-point references without actionable memory sources are omitted.",
+        "/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */"
+      ],
+      "findings": [
+        {
+          "confidence": "observed",
+          "finding": "The source image maps at 0x0, with selected execution entry 0x100 at file offset 0x100, under PowerPC:BE:32:default.",
+          "evidence_ids": [
+            "ev_77d60ccf9d076414c9a925ece2e85d382290ec2e6c3544389efc1e72ecb06b1e"
+          ]
+        },
+        {
+          "confidence": "observed",
+          "finding": "The branch instruction at 0x100 has an encoded direct target of 0x168.",
+          "evidence_ids": [
+            "ev_a4526796a68eb6876ba2a17270d696baffe0b754cedbbaff99f20e98fd9f8a83"
+          ]
+        },
+        {
+          "confidence": "observed",
+          "finding": "The early initialization sequence at 0x170, 0x174 and 0x178 decodes as: li r9,0x2007; lis r12,0x30; sth r9,0x6806(r12). These are static instruction observations; hardware register meanings remain unknown.",
+          "evidence_ids": [
+            "ev_2b13b1789ad58328ab8e717052360995db2ec89bc7f920c1a553f603ec35dfb3",
+            "ev_891a2de448bc2fac8d1e68ad372745735b4344181c946019b00851ad116dff8b",
+            "ev_fd3b1eff03ad8365209588a0721e8a65b1398425721feea802c06e1f480e357d",
+            "ev_c00451a67517dac2a2cdaad3029c441987509580df4fe4fcc5c98198fae41f99"
+          ]
+        }
+      ],
+      "limitations": [
+        "Static analysis only; no firmware execution.",
+        "Instruction and byte agreement do not prove complete processor or peripheral semantics.",
+        "Pseudocode presence does not establish semantic equivalence."
+      ]
+    },
+    {
+      "job_id": "cpu32-table-fixture",
+      "status": "passed",
+      "evidence_records": 8,
+      "load_address": "0x0",
+      "entry_point": "0x20",
+      "language": "68000:BE:32:CPU32",
+      "source_sha256": "3352b2aacc8879da6492563269c83a34dee4e0d5270d2d76cb9d7805f1fe02dd",
+      "profile_digest": "2320c5b8921c74c06f991d8dfecb87a72a13ce8c1d08eb148630ade207369283",
+      "warnings": [
+        "Unresolved computed or indirect flows without target addresses are not represented as reference edges.",
+        "Thunk and external classifications are Ghidra FunctionManager observations; they do not resolve targetless calls.",
+        "Pseudocode and assembly are Ghidra-specific representations, not original source or Hopper-equivalent text.",
+        "Synthetic Ghidra entry-point references without actionable memory sources are omitted."
+      ],
+      "findings": [
+        {
+          "confidence": "observed",
+          "finding": "The source image maps at 0x0, with selected execution entry 0x20 at file offset 0x20, under 68000:BE:32:CPU32.",
+          "evidence_ids": [
+            "ev_7e6ba4d003c10963750fcc1663e26eda7287c86bada3eb48681e050d79dbd735"
+          ]
+        },
+        {
+          "confidence": "observed",
+          "finding": "GNU-assembled bytes f8100100 at 0x24 decode as tblu.b (A0),D0 and the table function produces nonempty pseudocode without unimplemented-operation markers.",
+          "evidence_ids": [
+            "ev_906c27af02133ed70edf946cb6b706eb8e5f552ead653bca447491b54374513b",
+            "ev_dcff7b4f81b432a929a4afbab4604f2f817c0e07fdb692b9e31ec896622b6192"
+          ]
+        }
+      ],
+      "limitations": [
+        "Static analysis only; no firmware execution.",
+        "Instruction and byte agreement do not prove complete processor or peripheral semantics.",
+        "Pseudocode presence does not establish semantic equivalence."
+      ]
+    },
+    {
+      "job_id": "powerpc-call-fixture",
+      "status": "passed",
+      "evidence_records": 10,
+      "load_address": "0x0",
+      "entry_point": "0x0",
+      "language": "PowerPC:BE:32:default",
+      "source_sha256": "0066a816e47e08e5d211b463944af39dbdc4f82eaff179f8e700004868795f15",
+      "profile_digest": "8699eeefa1962069e3d90cff8e877ee7bb6e0da5376cf3b08748b5f2fc58bad3",
+      "warnings": [
+        "Unresolved computed or indirect flows without target addresses are not represented as reference edges.",
+        "Thunk and external classifications are Ghidra FunctionManager observations; they do not resolve targetless calls.",
+        "Pseudocode and assembly are Ghidra-specific representations, not original source or Hopper-equivalent text.",
+        "Synthetic Ghidra entry-point references without actionable memory sources are omitted."
+      ],
+      "findings": [
+        {
+          "confidence": "observed",
+          "finding": "The source image maps at 0x0, with selected execution entry 0x0 at file offset 0x0, under PowerPC:BE:32:default.",
+          "evidence_ids": [
+            "ev_91f53dba0e1bfaedf2bd1a322a9270665396a1cb88ffeb5a30e4eb228f641e8e"
+          ]
+        },
+        {
+          "confidence": "observed",
+          "finding": "The branch-and-link instruction at 0x8 resolves to 0x20; the source-owned helper decompiles with return constant 7.",
+          "evidence_ids": [
+            "ev_2d06e236dc93ba244ea25d82b19eed443d65f43701d03b0f6c6ab8aec4bfe459",
+            "ev_a38756e769e9fedc383784575229468422fb881bed54aad3ec59b0bc77692419"
+          ]
+        }
+      ],
+      "limitations": [
+        "Static analysis only; no firmware execution.",
+        "Instruction and byte agreement do not prove complete processor or peripheral semantics.",
+        "Pseudocode presence does not establish semantic equivalence."
+      ]
+    },
+    {
+      "job_id": "cpu32-relocated-fixture",
+      "status": "passed",
+      "evidence_records": 8,
+      "load_address": "0x1000",
+      "entry_point": "0x1020",
+      "language": "68000:BE:32:CPU32",
+      "source_sha256": "3352b2aacc8879da6492563269c83a34dee4e0d5270d2d76cb9d7805f1fe02dd",
+      "profile_digest": "5131a6f73d13aea58b3d1e35b1a37742c6138191f29661f4e07745ace1485f6d",
+      "warnings": [
+        "Unresolved computed or indirect flows without target addresses are not represented as reference edges.",
+        "Thunk and external classifications are Ghidra FunctionManager observations; they do not resolve targetless calls.",
+        "Pseudocode and assembly are Ghidra-specific representations, not original source or Hopper-equivalent text.",
+        "Synthetic Ghidra entry-point references without actionable memory sources are omitted."
+      ],
+      "findings": [
+        {
+          "confidence": "observed",
+          "finding": "The source image maps at 0x1000, with selected execution entry 0x1020 at file offset 0x20, under 68000:BE:32:CPU32.",
+          "evidence_ids": [
+            "ev_163e0903c4cb290de85eab1e89d5fad0232da558458e78756bc2a741532787d3"
+          ]
+        },
+        {
+          "confidence": "observed",
+          "finding": "GNU-assembled bytes f8100100 at 0x1024 decode as tblu.b (A0),D0 and the table function produces nonempty pseudocode without unimplemented-operation markers.",
+          "evidence_ids": [
+            "ev_4d1fb048199ba87b17223dc1152e512f6a66fea41663301f72f2516ea8e33301",
+            "ev_a7323fc75478b688b99c761644eb7efb4fb63ef871e286502a3fb03726d140da"
+          ]
+        }
+      ],
+      "limitations": [
+        "Static analysis only; no firmware execution.",
+        "Instruction and byte agreement do not prove complete processor or peripheral semantics.",
+        "Pseudocode presence does not establish semantic equivalence."
+      ]
+    },
+    {
+      "job_id": "powerpc-relocated-fixture",
+      "status": "passed",
+      "evidence_records": 8,
+      "load_address": "0x2000",
+      "entry_point": "0x2000",
+      "language": "PowerPC:BE:32:default",
+      "source_sha256": "0066a816e47e08e5d211b463944af39dbdc4f82eaff179f8e700004868795f15",
+      "profile_digest": "07165284bf3fbdc7b77e097fd44678cc20395c8b0c0c820fe9e0628a8e186478",
+      "warnings": [
+        "Unresolved computed or indirect flows without target addresses are not represented as reference edges.",
+        "Thunk and external classifications are Ghidra FunctionManager observations; they do not resolve targetless calls.",
+        "Pseudocode and assembly are Ghidra-specific representations, not original source or Hopper-equivalent text.",
+        "Synthetic Ghidra entry-point references without actionable memory sources are omitted."
+      ],
+      "findings": [
+        {
+          "confidence": "observed",
+          "finding": "The source image maps at 0x2000, with selected execution entry 0x2000 at file offset 0x0, under PowerPC:BE:32:default.",
+          "evidence_ids": [
+            "ev_dfe9aed6107002d92fb445b577a1bd32a262be22ae475d8ee373c7bab29eec03"
+          ]
+        },
+        {
+          "confidence": "observed",
+          "finding": "The branch-and-link instruction at 0x2008 resolves to 0x2020; the source-owned helper decompiles with return constant 7.",
+          "evidence_ids": [
+            "ev_23cbb0c956d467b18c0caf1384312065e3d41b63b9c5784122841c29145166cb",
+            "ev_f981dda2d7234836ebd8522afae4fced696e468209ebde530f5787261b8e7b74"
+          ]
+        }
+      ],
+      "limitations": [
+        "Static analysis only; no firmware execution.",
+        "Instruction and byte agreement do not prove complete processor or peripheral semantics.",
+        "Pseudocode presence does not establish semantic equivalence."
+      ]
+    },
+    {
+      "job_id": "cpu32-legacy-fixture",
+      "status": "passed",
+      "evidence_records": 8,
+      "load_address": "0x4000",
+      "entry_point": "0x4000",
+      "language": "68000:BE:32:CPU32",
+      "source_sha256": "3352b2aacc8879da6492563269c83a34dee4e0d5270d2d76cb9d7805f1fe02dd",
+      "profile_digest": "2e7294a8fa7f73ca6250eab9d23b95fe88451f28213b3be497388cd5da7dc4f0",
+      "warnings": [
+        "Unresolved computed or indirect flows without target addresses are not represented as reference edges.",
+        "Thunk and external classifications are Ghidra FunctionManager observations; they do not resolve targetless calls.",
+        "Pseudocode and assembly are Ghidra-specific representations, not original source or Hopper-equivalent text.",
+        "Synthetic Ghidra entry-point references without actionable memory sources are omitted."
+      ],
+      "findings": [
+        {
+          "confidence": "observed",
+          "finding": "The source image maps at 0x4000, with selected execution entry 0x4000 at file offset 0x0, under 68000:BE:32:CPU32.",
+          "evidence_ids": [
+            "ev_537b2730e8eaa24718cb4fd8ba5108fe9cf6256f56b59bdd67adcc412f81fd24"
+          ]
+        },
+        {
+          "confidence": "observed",
+          "finding": "Omitting load_address preserves legacy mapping at entry_point 0x4000; the relative call reaches the helper whose return value is 7.",
+          "evidence_ids": [
+            "ev_537b2730e8eaa24718cb4fd8ba5108fe9cf6256f56b59bdd67adcc412f81fd24",
+            "ev_654c9f28b49b8f2fcbc558c0f2a904a24166d70a6d77cd14cce75886de8d7003",
+            "ev_ff7b71608d4589b73010cbb79c0c9f1ba00cca07b9091f6ae6533722a3611abb"
+          ]
+        }
+      ],
+      "limitations": [
+        "Static analysis only; no firmware execution.",
+        "Instruction and byte agreement do not prove complete processor or peripheral semantics.",
+        "Pseudocode presence does not establish semantic equivalence."
+      ]
+    }
+  ]
+}

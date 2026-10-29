@@ -112,6 +112,7 @@ const targetSchema = z.discriminatedUnion("format", [
     format: z.literal("raw-binary"),
     kind: z.literal("executable"),
     architecture: binaryArchitectureSchema,
+    load_address: rawBinaryEntryPointSchema.exactOptional(),
     entry_point: rawBinaryEntryPointSchema,
   }),
   targetIdentitySchema.extend({
@@ -379,6 +380,9 @@ export const snapshotTarget = (target: BinaryTarget): AnalysisSnapshotTarget =>
         architecture: target.architecture,
         format: target.format,
         entry_point: target.entryPoint,
+        ...(target.loadAddress === undefined
+          ? {}
+          : { load_address: target.loadAddress }),
       }
     : target.format === "gamecube-dol"
       ? {
@@ -415,7 +419,9 @@ export const snapshotMatchesTarget = (
   snapshot.architecture === (target.architecture ?? null) &&
   (snapshot.format !== "raw-binary" ||
     (target.format === "raw-binary" &&
-      snapshot.entry_point === target.entryPoint)) &&
+      snapshot.entry_point === target.entryPoint &&
+      (snapshot.load_address ?? snapshot.entry_point) ===
+        (target.loadAddress ?? target.entryPoint))) &&
   (snapshot.format !== "gamecube-dol" ||
     (target.format === "gamecube-dol" &&
       snapshot.entry_point === target.entryPoint));
