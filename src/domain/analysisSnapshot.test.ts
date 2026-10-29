@@ -730,3 +730,42 @@ describe("analysis snapshot payload ownership", () => {
     },
   );
 });
+
+describe("raw firmware snapshot mapping identity", () => {
+  const target: Extract<BinaryTarget, { format: "raw-binary" }> = {
+    path: "/tmp/pcm.bin",
+    sha256: "a".repeat(64),
+    kind: "executable",
+    format: "raw-binary",
+    architecture: "cpu32",
+    availableArchitectures: ["cpu32"],
+    entryPoint: "0x440",
+    entryPointSource: "0x440",
+    loadAddress: "0x0",
+  };
+  it("binds image base independently of execution entry", () => {
+    const snapshot = snapshotTarget(target);
+    expect(snapshot).toMatchObject({
+      load_address: "0x0",
+      entry_point: "0x440",
+    });
+    expect(snapshotMatchesTarget(snapshot, target)).toBe(true);
+    expect(
+      snapshotMatchesTarget(snapshot, { ...target, loadAddress: "0x100" }),
+    ).toBe(false);
+    expect(
+      snapshotMatchesTarget(snapshot, { ...target, entryPoint: "0x444" }),
+    ).toBe(false);
+  });
+  it("keeps old snapshots bound to their legacy entry-as-base", () => {
+    const legacy = { ...target };
+    delete legacy.loadAddress;
+    const snapshot = snapshotTarget(legacy);
+    expect(snapshot).not.toHaveProperty("load_address");
+    expect(snapshotMatchesTarget(snapshot, legacy)).toBe(true);
+    expect(
+      snapshotMatchesTarget(snapshot, { ...legacy, loadAddress: "0x440" }),
+    ).toBe(true);
+    expect(snapshotMatchesTarget(snapshot, target)).toBe(false);
+  });
+});

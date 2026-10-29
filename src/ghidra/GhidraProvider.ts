@@ -97,6 +97,7 @@ const SUPPORTED_ARCHITECTURES = new Set([
   "riscv",
   "powerpc",
   "m68k",
+  "cpu32",
   "hexagon",
 ]);
 

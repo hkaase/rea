@@ -9,13 +9,14 @@ public final class ReaGhidraPrepareRaw extends GhidraScript {
     @Override
     public void run() throws Exception {
         String[] arguments = getScriptArgs();
-        if (arguments.length != 2) {
+        if (arguments.length != 2 && arguments.length != 3) {
             throw new IllegalArgumentException(
                 "Raw binary preparation requires the committed language and entry address"
             );
         }
         String expectedLanguage = arguments[0];
-        String entryHex = arguments[1];
+        String baseHex = arguments[1];
+        String entryHex = arguments.length == 3 ? arguments[2] : baseHex;
         if (!currentProgram.getLanguageID().getIdAsString().equals(expectedLanguage) ||
             !currentProgram.getExecutableFormat().equals("Raw Binary")) {
             throw new IllegalArgumentException(
@@ -23,13 +24,14 @@ public final class ReaGhidraPrepareRaw extends GhidraScript {
             );
         }
         Address entry = currentProgram.getAddressFactory().getDefaultAddressSpace().getAddress(entryHex);
-        MemoryBlock block = entry == null ? null : currentProgram.getMemory().getBlock(entry);
+        Address base = currentProgram.getAddressFactory().getDefaultAddressSpace().getAddress(baseHex);
+        MemoryBlock block = base == null ? null : currentProgram.getMemory().getBlock(base);
         boolean fileStart = false;
         if (block != null) {
             // Processor-defined zero page/stack blocks can precede the imported file.
             for (MemoryBlockSourceInfo source : block.getSourceInfos()) {
                 if (source.getFileBytes().isPresent() && source.getFileBytesOffset() == 0 &&
-                    entry.equals(source.getMinAddress())) {
+                    base.equals(source.getMinAddress())) {
                     fileStart = true;
                     break;
                 }
@@ -37,8 +39,11 @@ public final class ReaGhidraPrepareRaw extends GhidraScript {
         }
         if (!fileStart) {
             throw new IllegalArgumentException(
-                "Raw binary import must map file offset 0 at the caller-supplied entry"
+                "Raw binary import must map file offset 0 at the caller-supplied load address"
             );
+        }
+        if (entry == null || block == null || !block.contains(entry) || !block.isInitialized()) {
+            throw new IllegalArgumentException("Raw binary execution entry must be within initialized file bytes");
         }
         addEntryPoint(entry);
         if (!disassemble(entry) || createFunction(entry, "entry") == null) {

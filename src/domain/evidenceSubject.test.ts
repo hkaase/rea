@@ -36,7 +36,9 @@ describe("persisted observation subject declarations", () => {
           (format === "gamecube-dol"
             ? architecture === "powerpc"
             : format === "raw-binary" ||
-              (architecture !== "6502" && architecture !== "m68k"));
+              (architecture !== "6502" &&
+                architecture !== "m68k" &&
+                architecture !== "cpu32"));
         expect(evidence.success, JSON.stringify(declaration)).toBe(allowed);
         expect(snapshot.success, JSON.stringify(declaration)).toBe(allowed);
         const manifest = evidenceBundleSchema.shape.artifacts.element.safeParse(

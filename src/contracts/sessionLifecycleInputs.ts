@@ -35,13 +35,21 @@ export const openBinaryInputSchema = z
     entry_point: rawBinaryEntryPointSchema
       .optional()
       .describe(
-        "Caller-supplied load and entry address (0xhex). File offset 0 is mapped here. Required with format=raw-binary; rejected otherwise. Optional with format=gamecube-dol; must equal the DOL header entry.",
+        "Caller-supplied execution entry address (0xhex). File offset 0 maps here only when load_address is omitted. Required with format=raw-binary; rejected otherwise. Optional with format=gamecube-dol; must equal the DOL header entry.",
+      ),
+    load_address: rawBinaryEntryPointSchema
+      .optional()
+      .describe(
+        "Raw image load address (0xhex); file offset 0 maps here. Defaults to entry_point for legacy callers. Allowed only with format=raw-binary.",
       ),
     provider_id: analysisProviderSelectorSchema.optional(),
     snapshot_path: snapshotPathSchema.optional(),
   })
   .superRefine((value, context) => {
     const pairing = rawBinarySelectionError({
+      ...(value.load_address === undefined
+        ? {}
+        : { loadAddress: value.load_address }),
       ...(value.format === undefined ? {} : { format: value.format }),
       ...(value.architecture === undefined
         ? {}
@@ -54,13 +62,15 @@ export const openBinaryInputSchema = z
     context.addIssue({
       code: "custom",
       path:
-        value.format === "raw-binary"
-          ? value.architecture === undefined
-            ? ["architecture"]
-            : ["entry_point"]
-          : value.architecture === undefined
-            ? ["entry_point"]
-            : ["architecture"],
+        value.load_address !== undefined && value.format !== "raw-binary"
+          ? ["load_address"]
+          : value.format === "raw-binary"
+            ? value.architecture === undefined
+              ? ["architecture"]
+              : ["entry_point"]
+            : value.architecture === undefined
+              ? ["entry_point"]
+              : ["architecture"],
       message: pairing,
     });
   });

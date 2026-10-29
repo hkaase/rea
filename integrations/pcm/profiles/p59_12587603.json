@@ -1,0 +1,17 @@
+{
+  "name": "p59_12587603",
+  "architecture": "cpu32",
+  "load_address": "0x0",
+  "entry_point": "0x440",
+  "language": "68000:BE:32:CPU32",
+  "compiler": "default",
+  "size": 1048576,
+  "sha256": "3817697c53d79b42f9eb492921d6f5bc8cd1a0a0e116b51d30c8ab06edd022da",
+  "file_base": "0x0",
+  "entry_from_vector_offset": 4,
+  "source": "https://raw.githubusercontent.com/LegacyNsfw/12587603/5a563297204add19d43f8e371ffd90aacf900357/12587603-2004-Corvette-M6.bin",
+  "limitations": [
+    "Peripheral and RAM maps are not yet modeled.",
+    "This is a static import, not controller execution or behavioral validation."
+  ]
+}

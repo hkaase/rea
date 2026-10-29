@@ -48,3 +48,34 @@ describe("open_binary raw-binary input contract", () => {
     ).toBe(false);
   });
 });
+
+describe("open_binary firmware load selection", () => {
+  it.each(["cpu32", "powerpc"])(
+    "accepts explicit %s firmware mapping",
+    (architecture) => {
+      expect(
+        openBinaryInputSchema.parse({
+          path: "/tmp/pcm.bin",
+          format: "raw-binary",
+          architecture,
+          load_address: "0x0",
+          entry_point: "0x100",
+        }),
+      ).toMatchObject({ load_address: "0x0", entry_point: "0x100" });
+    },
+  );
+  it.each([undefined, "gamecube-dol", "dos-com"])(
+    "rejects load selection for %s",
+    (format) => {
+      const input = {
+        path: "/tmp/pcm.bin",
+        load_address: "0x0",
+        ...(format === undefined ? {} : { format }),
+      };
+      const parsed = openBinaryInputSchema.safeParse(input);
+      expect(parsed.success).toBe(false);
+      if (parsed.success) throw new Error("expected load selection refusal");
+      expect(parsed.error.issues[0]?.path).toEqual(["load_address"]);
+    },
+  );
+});

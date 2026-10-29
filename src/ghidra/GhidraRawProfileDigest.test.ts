@@ -70,3 +70,53 @@ describe("raw-binary analysis profile digest", () => {
     });
   });
 });
+
+describe("raw firmware profile commitments", () => {
+  it("changes identity when load address changes independently of entry", async () => {
+    const target: Extract<BinaryTarget, { format: "raw-binary" }> = {
+      path: "/tmp/pcm.bin",
+      sha256: "a".repeat(64),
+      kind: "executable",
+      format: "raw-binary",
+      architecture: "cpu32",
+      availableArchitectures: ["cpu32"],
+      entryPoint: "0x440",
+      entryPointSource: "0x440",
+      loadAddress: "0x0",
+    };
+    const provider = new GhidraProvider(configFor({}), silentLogger, {}, host);
+    const first = await provider.resolveAnalysisProfile(target);
+    const second = await provider.resolveAnalysisProfile({
+      ...target,
+      loadAddress: "0x100",
+    });
+    if (!first.ok || !second.ok) throw new Error("expected firmware profiles");
+    expect(first.value.profile?.parameters).toMatchObject({
+      load_address: "0x0",
+      entry_point: "0x440",
+      language_id: "68000:BE:32:CPU32",
+    });
+    expect(second.value.profile?.digest).not.toBe(first.value.profile?.digest);
+  });
+  it("admits a raw PowerPC profile without inventing ELF metadata", async () => {
+    const target: BinaryTarget = {
+      path: "/tmp/ppc.bin",
+      sha256: "a".repeat(64),
+      kind: "executable",
+      format: "raw-binary",
+      architecture: "powerpc",
+      availableArchitectures: ["powerpc"],
+      entryPoint: "0x100",
+      entryPointSource: "0x100",
+      loadAddress: "0x0",
+    };
+    const provider = new GhidraProvider(configFor({}), silentLogger, {}, host);
+    const result = await provider.resolveAnalysisProfile(target);
+    if (!result.ok) throw result.error;
+    expect(result.value.profile?.parameters).toMatchObject({
+      load_address: "0x0",
+      entry_point: "0x100",
+      language_id: "PowerPC:BE:32:default",
+    });
+  });
+});

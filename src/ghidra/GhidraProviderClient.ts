@@ -1,3 +1,4 @@
+import { rawBinaryLoadAddress } from "../domain/rawBinary.js";
 import { filterGhidraLiteralCandidates } from "./GhidraLiteralSearch.js";
 import { ghidraProjectHistoryEvidence } from "./GhidraProjectHistory.js";
 import type { Evidence, EvidenceLocation } from "../domain/evidence.js";
@@ -366,8 +367,8 @@ export const createGhidraProviderClient = (input: {
       : []),
     ...(target.format === "raw-binary"
       ? [
-          "Headerless raw-binary analysis uses the caller-supplied architecture and entry address; file offset 0 is mapped at that address. Headers are not discovered from file bytes.",
-          "Little-endian generic Ghidra languages are used for x86, x86_64, arm, arm64, and NMOS 6502; m68k uses the big-endian 68000 default language, which decodes the 68040 superset. Big-endian ARM, Thumb-only, Cortex-M, 65C02, 65816, separate 68020/68030/CPU32/ColdFire variants, and other processor variants are unsupported in this increment.",
+          "Headerless raw-binary analysis uses the caller-supplied architecture, load address, and execution entry. File offset 0 maps at load_address, which defaults to entry_point for legacy callers. Headers are not discovered from file bytes.",
+          "Little-endian generic languages are used for x86, x86_64, arm, arm64, and NMOS 6502. m68k uses the big-endian 68040 superset; cpu32 uses Ghidra CPU32; powerpc uses generic big-endian PowerPC32. Processor-specific peripherals and complete instruction semantics are not established by language selection. Big-endian ARM, Thumb-only, Cortex-M, 65C02, 65816, ColdFire, and other variants remain unsupported.",
           "Static analysis does not emulate reset vectors, memory-mapped I/O, or firmware boot sequences.",
         ]
       : []),
@@ -446,7 +447,8 @@ export const createGhidraProviderClient = (input: {
             rawBinary: {
               languageId: rawLanguage.languageId,
               compilerSpecId: rawLanguage.compilerSpecId,
-              baseAddr: target.entryPoint,
+              baseAddr: rawBinaryLoadAddress(target),
+              entryPoint: target.entryPoint,
             },
           }),
       ...(target.format === "gamecube-dol"

@@ -43,7 +43,9 @@ export const ghidraPowerPcUnsupportedReason = (
 export const ghidraPowerPcLanguage = (
   target: BinaryTarget,
 ): GhidraLanguageOverride | undefined =>
-  target.kind === "executable" && target.architecture === "powerpc"
+  target.kind === "executable" &&
+  target.format === "elf" &&
+  target.architecture === "powerpc"
     ? GHIDRA_POWERPC_LANGUAGE
     : undefined;
 

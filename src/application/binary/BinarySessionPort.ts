@@ -64,6 +64,7 @@ export interface BinarySessionPort
       readonly formatHint?: ExecutableFormatHint;
       readonly architecture?: BinaryArchitecture;
       readonly entryPoint?: string;
+      readonly loadAddress?: string;
       readonly snapshot?: AnalysisSnapshot;
       readonly loadSnapshot?: AnalysisSnapshotLoader;
       readonly providerId?: AnalysisProviderSelector;

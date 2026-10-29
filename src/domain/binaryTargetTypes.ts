@@ -13,6 +13,7 @@ export const BINARY_ARCHITECTURES = [
   "riscv",
   "powerpc",
   "m68k",
+  "cpu32",
   "hexagon",
 ] as const;
 export type BinaryArchitecture = (typeof BINARY_ARCHITECTURES)[number];
@@ -24,6 +25,7 @@ export type BinaryArchitecture = (typeof BINARY_ARCHITECTURES)[number];
 export const RAW_ONLY_ARCHITECTURES = [
   "6502",
   "m68k",
+  "cpu32",
 ] as const satisfies readonly BinaryArchitecture[];
 export type RawOnlyArchitecture = (typeof RAW_ONLY_ARCHITECTURES)[number];
 
@@ -214,13 +216,19 @@ export type BinaryTarget =
   | (BinaryTargetIdentity & {
       readonly kind: "executable";
       readonly format: "raw-binary";
-      readonly architecture: HeaderArchitecture | RawOnlyArchitecture;
+      readonly architecture:
+        | HeaderArchitecture
+        | RawOnlyArchitecture
+        | "powerpc";
       readonly availableArchitectures: readonly (
         | HeaderArchitecture
         | RawOnlyArchitecture
+        | "powerpc"
       )[];
       readonly entryPoint: string;
       readonly entryPointSource: string;
+      readonly loadAddress?: string;
+      readonly loadAddressSource?: string;
       readonly executableRole?: never;
       readonly managed?: never;
     })
